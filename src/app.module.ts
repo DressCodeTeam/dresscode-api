@@ -4,11 +4,16 @@ import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from './modules/users/users.module';
+import { LoggerModule } from './modules/shared/logger.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: [
+        `.env.${process.env.NODE_ENV || 'development'}`,
+        '.env',
+      ],
       load: [appConfig, databaseConfig],
     }),
     MongooseModule.forRootAsync({
@@ -18,6 +23,7 @@ import { UsersModule } from './modules/users/users.module';
       inject: [ConfigService],
     }),
     UsersModule,
+    LoggerModule
   ],
 })
 export class AppModule {}

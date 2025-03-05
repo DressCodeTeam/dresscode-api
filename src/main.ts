@@ -1,11 +1,16 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { AllExceptionsFilter } from './modules/shared/all-exceptions.filter';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: ['log', 'error', 'warn', 'debug', 'verbose'],
+  });
+  // app.use(morgan('combined')); // Utiliser le format souhaité (ex. 'combined', 'dev', etc.)
   app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalFilters(new AllExceptionsFilter());
   const config = new DocumentBuilder()
     .setTitle('DressCode API')
     .setDescription('API for virtual wardrobe management')
@@ -15,7 +20,8 @@ async function bootstrap() {
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
 
-  await app.listen(3000);
-  console.log(`Application is running on: http://localhost:3000/`);
+  const logger = new Logger('Bootstrap');
+  await app.listen(process.env.PORT ?? 3000);
+  logger.log(`Application is running on: http://localhost:${process.env.PORT || 3000}`);
 }
 bootstrap();
