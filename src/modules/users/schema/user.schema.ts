@@ -10,7 +10,7 @@ export class User {
     example: 'john.doe@example.com',
     description: "Email de l'utilisateur",
   })
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true, unique: true, strict: false })
   email: string;
 
   @ApiProperty({
@@ -18,7 +18,7 @@ export class User {
     description: "Nom complet de l'utilisateur",
   })
   @Prop({ required: true })
-  name: string;
+  username: string;
 
   @ApiProperty({
     example: 'password123',
