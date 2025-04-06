@@ -1,32 +1,93 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { UsersService } from '../users/users.service';
-import * as bcrypt from 'bcrypt';
+import {
+  Injectable,
+  UnauthorizedException,
+  InternalServerErrorException,
+  BadRequestException,
+  Logger,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UsersService,
-    private jwtService: JwtService,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    private readonly jwtService: JwtService,
   ) {}
 
-  async signIn(email: string, pass: string): Promise<{access_token: string}> {
-    const user = await this.usersService.findByEmail(email);
+  async validateUser(email: string, password: string): Promise<any> {
+    // Execute the database function to validate the user
+    // const queryResult = await this.userRepository.query(
+    //   `SELECT connect_user($1, $2)`,
+    //   [email, password],
+    // );
 
-    if (!user) {
-      throw new UnauthorizedException('User with this email does not exist');
+    const queryResult = await this.userRepository.query(
+      `SELECT connect_user($1, $2)`,
+      [email, password],
+    );
+
+    // Extract the response from the query result
+    const userValidationResponse = queryResult[0]?.connect_user;
+
+    // Check if the response indicates a successful validation
+    const isValidationSuccessful = userValidationResponse?.success ?? false;
+
+    if (!isValidationSuccessful) {
+      // Throw an UnauthorizedException if validation fails
+      throw new UnauthorizedException(
+        userValidationResponse?.content || 'Invalid credentials',
+      );
     }
 
-    const isPasswordValid = await bcrypt.compare(pass, user.password);
+    // Return the validated user details
+    return userValidationResponse.content;
+  }
 
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid password');
+  async login(
+    email: string,
+    password: string,
+  ): Promise<{ access_token: string }> {
+    // Validate the user credentials
+    const user = await this.validateUser(email, password);
+
+    // Prepare the payload for the JWT
+    const jwtPayload = { sub: user.id, email: user.email };
+
+    // Sign the JWT and return the access token
+    return { access_token: this.jwtService.sign(jwtPayload) };
+  }
+
+  async register(
+    email: string,
+    password: string,
+    pseudo: string,
+    birthDate: Date,
+    idGender: number,
+  ): Promise<any> {
+    // Execute the database function to create a new user
+    const queryResult = await this.userRepository.query(
+      `SELECT create_user($1, $2, $3, $4, $5)`,
+      [email, password, pseudo, birthDate, idGender],
+    );
+
+    // Extract the response from the query result
+    const userCreationResponse = queryResult[0]?.create_user;
+
+    // Check if the response indicates a successful user creation
+    const isCreationSuccessful = userCreationResponse?.succes ?? false;
+
+    if (!isCreationSuccessful) {
+      // Throw a BadRequestException if user creation fails
+      throw new BadRequestException(
+        userCreationResponse?.content || 'Registration failed',
+      );
     }
 
-    const payload = { sub: user._id, email: user.email };
-    
-    return {
-      access_token: await this.jwtService.signAsync(payload),
-    };
+    // Return the created user details
+    return userCreationResponse.content;
   }
 }
