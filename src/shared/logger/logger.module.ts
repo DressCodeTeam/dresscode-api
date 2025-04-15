@@ -1,6 +1,5 @@
 import { Global, MiddlewareConsumer, Module } from '@nestjs/common';
-import { CustomLoggerService } from './custom-logger.service';
-import { MorganMiddleware } from './morgan.middleware';
+import { MorganMiddleware } from '../middlewares/morgan.middleware';
 
 @Global()
 @Module({

@@ -1,29 +1,34 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import appConfig from './config/app.config';
-import databaseConfig from './config/database.config';
-import { MongooseModule } from '@nestjs/mongoose';
+import { DatabaseModule } from './modules/database/database.module';
 import { UsersModule } from './modules/users/users.module';
-import { LoggerModule } from './modules/shared/logger.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { LoggerModule } from './shared/logger/logger.module';
+import { GendersModule } from './modules/genders/genders.module';
+import { GarmentsModule } from './modules/garments/garments.module';
+import { CategoriesModule } from './modules/categories/categories.module';
+import { StylesModule } from './modules/styles/styles.module';
+import { OutfitsModule } from './modules/outfits/outfits.module';
+import databaseConfig from './config/database.config';
+import jwtConfig from './config/jwt.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: [
-        `.env.${process.env.NODE_ENV || 'development'}`,
-        '.env',
-      ],
-      load: [appConfig, databaseConfig],
+      envFilePath: [`.env.${process.env.NODE_ENV || 'development'}`, '.env'],
+      load: [appConfig, databaseConfig, jwtConfig],
     }),
-    MongooseModule.forRootAsync({
-      useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>('uri'),
-      }),
-      inject: [ConfigService],
-    }),
+    DatabaseModule,
     UsersModule,
-    LoggerModule
+    AuthModule,
+    LoggerModule,
+    GendersModule,
+    GarmentsModule,
+    CategoriesModule,
+    StylesModule,
+    OutfitsModule,
   ],
 })
 export class AppModule {}

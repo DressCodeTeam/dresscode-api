@@ -6,7 +6,6 @@ import {
   Logger,
 } from '@nestjs/common';
 import { stat } from 'fs';
-import { MongoError } from 'mongodb';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -24,12 +23,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
       // Gestion des erreurs HTTP
       status = exception.getStatus();
       errorMessage = exception.getResponse();
-    } else if (exception instanceof MongoError) {
-      // Mauvaise requête ou conflit
-      errorMessage = {
-        status: exception.code,
-        message: exception.message,
-      };
     } else if (exception instanceof Error) {
       // Gestion des autres erreurs JavaScript
       errorMessage = {

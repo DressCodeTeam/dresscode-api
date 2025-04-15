@@ -1,5 +1,7 @@
 // Database configuration
+import { registerAs } from '@nestjs/config';
 
-export default () => ({
-  uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/dresscode',
-});
+export default registerAs('database', () => ({
+  type: 'postgres',
+  url: process.env.DATABASE_URL,
+}));
