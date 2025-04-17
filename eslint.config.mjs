@@ -34,9 +34,9 @@ export default tseslint.config(
         }
       ],
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-floating-promises': 'off',
+      '@typescript-eslint/no-floating-promises': 'off', // warn
       '@typescript-eslint/no-unsafe-argument': 'warn',
-      //
+      // added
       '@typescript-eslint/interface-name-prefix': 'off',
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
