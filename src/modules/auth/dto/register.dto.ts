@@ -66,5 +66,5 @@ export class RegisterResponseDto {
     example: '1990-01-01',
     description: "user's birth date",
   })
-  birth_date: Date; // DATE
+  birth_date: string; // DATE
 }
