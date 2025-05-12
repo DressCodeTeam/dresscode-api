@@ -1,20 +1,24 @@
-import {
-  IsUUID,
-  IsArray,
-  IsInt,
-  IsNotEmpty,
-  ArrayNotEmpty,
-} from 'class-validator';
+import { IsArray, IsInt, IsNotEmpty, ArrayNotEmpty } from 'class-validator';
 import { Type } from 'class-transformer';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateOutfitDto {
-  @IsArray() // Ensures the value is an array
-  @ArrayNotEmpty() // Ensures the array is not empty
-  @IsInt({ each: true }) // Ensures each element in the array is an integer
-  @Type(() => Number) // Transforms each element to a number
-  garment_ids: number[]; // List of garment IDs
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsInt({ each: true })
+  @Type(() => Number)
+  @ApiProperty({
+    description: 'Array of garment IDs that make up the outfit',
+    example: [1, 2, 3],
+    type: [Number],
+  })
+  garment_ids: number[];
 
-  @IsInt() // Ensures the value is an integer
+  @IsInt()
   @IsNotEmpty()
-  style_id: number; // Represents the style's identifier
+  @ApiProperty({
+    description: 'The ID of the style associated with the outfit',
+    example: 1,
+  })
+  style_id: number;
 }

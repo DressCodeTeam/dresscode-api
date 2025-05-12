@@ -1,9 +1,15 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { CreateStyleDto } from './dto/create-style.dto';
-import { UpdateStyleDto } from './dto/update-style.dto';
+import { StyleResponseDto } from './dto/style-response.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Style } from './entities/style.entity';
 import { Repository } from 'typeorm';
+
+type GetStylesResponse = {
+  get_style: {
+    success: boolean;
+    content: StyleResponseDto[];
+  };
+}[];
 
 @Injectable()
 export class StylesService {
@@ -12,16 +18,14 @@ export class StylesService {
     private readonly styleRepository: Repository<Style>,
   ) {}
 
-  // create(createStyleDto: CreateStyleDto) {
-  //   return 'This action adds a new style';
-  // }
-
-  async findAll(): Promise<any[]> {
+  async findAll(): Promise<StyleResponseDto[]> {
     try {
-      const result = await this.styleRepository.query(`SELECT get_style()`);
+      const queryResult = (await this.styleRepository.query(
+        `SELECT get_style()`,
+      )) as GetStylesResponse;
 
       // Extract the response from the query result
-      const response = result[0]?.get_style;
+      const response = queryResult[0]?.get_style;
 
       // Check if the response indicates success
       if (!response?.success) {
@@ -33,21 +37,7 @@ export class StylesService {
       // Return the content (list of genders)
       return response.content;
     } catch (error) {
-      throw new InternalServerErrorException(
-        `Error fetching styles ${error.message}`,
-      );
+      throw new InternalServerErrorException(`Error fetching styles ${error}`);
     }
   }
-
-  // findOne(id: number) {
-  //   return `This action returns a #${id} style`;
-  // }
-
-  // update(id: number, updateStyleDto: UpdateStyleDto) {
-  //   return `This action updates a #${id} style`;
-  // }
-
-  // remove(id: number) {
-  //   return `This action removes a #${id} style`;
-  // }
 }

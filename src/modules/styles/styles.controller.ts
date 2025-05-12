@@ -1,42 +1,22 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { StylesService } from './styles.service';
-import { CreateStyleDto } from './dto/create-style.dto';
-import { UpdateStyleDto } from './dto/update-style.dto';
+import { StyleResponseDto } from './dto/style-response.dto';
+import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 
 @Controller('styles')
 export class StylesController {
   constructor(private readonly stylesService: StylesService) {}
 
-  // @Post()
-  // create(@Body() createStyleDto: CreateStyleDto) {
-  //   return this.stylesService.create(createStyleDto);
-  // }
-
   @Get()
-  findAll() {
+  @ApiOperation({
+    summary: 'Get all garment styles',
+  })
+  @ApiOkResponse({
+    description: 'List of all garment styles available',
+    type: StyleResponseDto,
+    isArray: true,
+  })
+  async findAll(): Promise<StyleResponseDto[]> {
     return this.stylesService.findAll();
   }
-
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.stylesService.findOne(+id);
-  // }
-
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateStyleDto: UpdateStyleDto) {
-  //   return this.stylesService.update(+id, updateStyleDto);
-  // }
-
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.stylesService.remove(+id);
-  // }
 }

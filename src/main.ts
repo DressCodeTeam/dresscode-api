@@ -1,32 +1,75 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { Logger, ValidationPipe } from '@nestjs/common';
+import {
+  BadRequestException,
+  INestApplication,
+  Logger,
+  ValidationPipe,
+} from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { AllExceptionsFilter } from './shared/all-exceptions.filter';
+import { AllExceptionsFilter } from './shared/filters/all-exceptions.filter';
+import { LoggingInterceptor } from './shared/interceptors/logging.interceptor';
+
+const logger = new Logger('Bootstrap');
+
+function setupSwagger(app: INestApplication) {
+  const config = new DocumentBuilder()
+    .setTitle('DressCode API')
+    .setDescription('API for managing outfits and garments')
+    .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'Bearer',
+        bearerFormat: 'JWT',
+        name: 'Authorization',
+        description: 'Enter JWT token',
+        in: 'header',
+      },
+      'access-token',
+    )
+    .addTag('DressCode')
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
+}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: ['log', 'error', 'warn', 'debug', 'verbose'],
   });
 
-  // app.use(morgan('combined')); // Utiliser le format souhaité (ex. 'combined', 'dev', etc.)
-  app.useGlobalPipes(new ValidationPipe());
+  app.enableCors();
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
+      exceptionFactory: (errors) => {
+        return new BadRequestException(
+          errors.map((err) => ({
+            field: err.property,
+            errors: Object.values(err.constraints || {}),
+          })),
+        );
+      },
+    }),
+  );
+  app.useGlobalInterceptors(new LoggingInterceptor());
   app.useGlobalFilters(new AllExceptionsFilter());
 
-  const config = new DocumentBuilder()
-    .setTitle('DressCode API')
-    .setDescription('API for virtual wardrobe management')
-    .setVersion('1.0')
-    .build();
+  setupSwagger(app);
 
-  const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, documentFactory);
-
-  const logger = new Logger('Bootstrap');
-  await app.listen(process.env.PORT ?? 3000);
-  logger.log(
-    `Application is running on: http://localhost:${process.env.PORT || 3000}`,
-  );
+  const PORT = process.env.PORT || 3000;
+  await app.listen(PORT);
+  logger.log(`🚀 Server is running on port ${PORT}`);
 }
 
-bootstrap();
+bootstrap().catch((error) => {
+  logger.error(`Failed to start the application: ${error}`);
+});

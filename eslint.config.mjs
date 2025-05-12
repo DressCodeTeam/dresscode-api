@@ -27,21 +27,15 @@ export default tseslint.config(
   },
   {
     rules: {
-      "prettier/prettier": [
-        "error",
+      'prettier/prettier': [
+        'error',
         {
-          "endOfLine": "auto",
-        }
+          endOfLine: 'auto',
+        },
       ],
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-floating-promises': 'off', // warn
+      '@typescript-eslint/no-floating-promises': 'warn',
       '@typescript-eslint/no-unsafe-argument': 'warn',
-      // added
-      '@typescript-eslint/interface-name-prefix': 'off',
-      '@typescript-eslint/explicit-function-return-type': 'off',
-      '@typescript-eslint/explicit-module-boundary-types': 'off',
-      '@typescript-eslint/rules/no-unsafe-call': 'off',
-      '@typescript-eslint/rules/no-unsafe-member-access': 'off'
     },
   },
 );

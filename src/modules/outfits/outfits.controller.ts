@@ -3,46 +3,68 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
-  Delete,
   UseGuards,
   Request,
 } from '@nestjs/common';
 import { OutfitsService } from './outfits.service';
 import { CreateOutfitDto } from './dto/create-outfit.dto';
-import { UpdateOutfitDto } from './dto/update-outfit.dto';
-import { AuthGuard } from '@nestjs/passport';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AuthenticatedRequest } from '../auth/types/authenticated-request';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+} from '@nestjs/swagger';
+import { OutfitResponseDto } from './dto/outfit-response.dto';
+import { GarmentSummaryDto } from '../garments/dto/garment-response.dto';
 
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('outfits')
 export class OutfitsController {
   constructor(private readonly outfitsService: OutfitsService) {}
 
   @Post()
-  @UseGuards(AuthGuard('jwt')) // Protect this route
-  create(@Request() req, @Body() createOutfitDto: CreateOutfitDto) {
+  @ApiOperation({ summary: "Add a new outfit to the user's outfits" })
+  @ApiBody({ type: CreateOutfitDto })
+  @ApiCreatedResponse({
+    description: 'The created outfit',
+    type: OutfitResponseDto,
+  })
+  async create(
+    @Request() req: AuthenticatedRequest,
+    @Body() createOutfitDto: CreateOutfitDto,
+  ): Promise<OutfitResponseDto> {
     return this.outfitsService.create(req.user.userId, createOutfitDto);
   }
 
   @Get()
-  @UseGuards(AuthGuard('jwt')) // Protect this route
-  findAll(@Request() req) {
+  @ApiOperation({ summary: 'Get all outfits of the user' })
+  @ApiOkResponse({
+    description: 'List of all outfits of the user',
+    type: OutfitResponseDto,
+    isArray: true,
+  })
+  async findAll(
+    @Request() req: AuthenticatedRequest,
+  ): Promise<OutfitResponseDto[]> {
     return this.outfitsService.findAll(req.user.userId);
   }
 
   @Get(':id')
-  @UseGuards(AuthGuard('jwt')) // Protect this route
-  findOne(@Request() req, @Param('id') id: string) {
+  @ApiOperation({ summary: "Get a specific outfit's garments by ID" })
+  @ApiOkResponse({
+    description: "The outfit's garments with the specified ID",
+    type: GarmentSummaryDto,
+    isArray: true,
+  })
+  async findOne(
+    @Request() req,
+    @Param('id') id: string,
+  ): Promise<GarmentSummaryDto[]> {
     return this.outfitsService.findOne(+id);
   }
-
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateOutfitDto: UpdateOutfitDto) {
-  //   return this.outfitsService.update(+id, updateOutfitDto);
-  // }
-
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.outfitsService.remove(+id);
-  // }
 }

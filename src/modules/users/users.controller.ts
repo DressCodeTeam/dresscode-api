@@ -1,12 +1,19 @@
 import { Controller, Get, Logger, Request, UseGuards } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { UsersService } from './users.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AuthenticatedRequest } from '../auth/types/authenticated-request';
 
 @Controller('users')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 export class UsersController {
+  constructor(private readonly usersService: UsersService) {}
+  // TODO: Implement a service to get user's profile and add Api Documentation decorators
   @Get('profile')
-  @UseGuards(AuthGuard('jwt')) // Protect this route
-  getProfile(@Request() req) {
+  @ApiOperation({ summary: "Return user's profile" })
+  getProfile(@Request() req: AuthenticatedRequest) {
     Logger.log('User profile accessed', req.user);
-    return { message: `This is a protected route` };
+    return this.usersService.getProfile(req.user.userId);
   }
 }
