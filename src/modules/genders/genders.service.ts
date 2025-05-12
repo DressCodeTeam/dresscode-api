@@ -2,7 +2,13 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Gender } from './entities/gender.entity';
-
+import { GenderResponseDto } from './dto/gender-reponse.dto';
+type GetGendersResponse = {
+  get_gender: {
+    success: boolean;
+    content: GenderResponseDto[];
+  };
+}[];
 @Injectable()
 export class GendersService {
   constructor(
@@ -10,12 +16,14 @@ export class GendersService {
     private readonly genderRepository: Repository<Gender>,
   ) {}
 
-  async findAll(): Promise<any[]> {
+  async findAll(): Promise<GenderResponseDto[]> {
     try {
-      const result = await this.genderRepository.query(`SELECT get_gender()`);
+      const queryResult = (await this.genderRepository.query(
+        `SELECT get_gender()`,
+      )) as GetGendersResponse;
 
       // Extract the response from the query result
-      const response = result[0]?.get_gender;
+      const response = queryResult[0]?.get_gender;
 
       // Check if the response indicates success
       if (!response?.success) {
@@ -27,9 +35,7 @@ export class GendersService {
       // Return the content (list of genders)
       return response.content;
     } catch (error) {
-      throw new InternalServerErrorException(
-        `Error fetching genders ${error.message}`,
-      );
+      throw new InternalServerErrorException(`Error fetching genders ${error}`);
     }
   }
 }
