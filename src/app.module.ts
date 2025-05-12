@@ -4,7 +4,6 @@ import appConfig from './config/app.config';
 import { DatabaseModule } from './modules/database/database.module';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { LoggerModule } from './shared/logger/logger.module';
 import { GendersModule } from './modules/genders/genders.module';
 import { GarmentsModule } from './modules/garments/garments.module';
 import { CategoriesModule } from './modules/categories/categories.module';
@@ -23,7 +22,6 @@ import jwtConfig from './config/jwt.config';
     DatabaseModule,
     UsersModule,
     AuthModule,
-    LoggerModule,
     GendersModule,
     GarmentsModule,
     CategoriesModule,

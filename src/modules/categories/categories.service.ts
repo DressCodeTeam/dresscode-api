@@ -1,9 +1,15 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { CreateCategoryDto } from './dto/create-category.dto';
-import { UpdateCategoryDto } from './dto/update-category.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Category } from './entities/category.entity';
 import { Repository } from 'typeorm';
+import { CategoryResponseDto } from './dto/category-response.dto';
+
+type GetCategoriesResponse = {
+  get_category: {
+    success: boolean;
+    content: CategoryResponseDto[];
+  };
+}[];
 
 @Injectable()
 export class CategoriesService {
@@ -12,44 +18,28 @@ export class CategoriesService {
     private readonly categoryRepository: Repository<Category>,
   ) {}
 
-  // create(createCategoryDto: CreateCategoryDto) {
-  //   return 'This action adds a new category';
-  // }
-
-  async findAll(): Promise<any[]> {
+  async findAll(): Promise<CategoryResponseDto[]> {
     try {
-      const result = await this.categoryRepository.query(
+      const queryResult = (await this.categoryRepository.query(
         `SELECT get_category()`,
-      );
+      )) as GetCategoriesResponse;
 
       // Extract the response from the query result
-      const response = result[0]?.get_category;
+      const categoriesResponse = queryResult[0]?.get_category;
 
       // Check if the response indicates success
-      if (!response?.success) {
+      if (!categoriesResponse?.success) {
         throw new InternalServerErrorException(
-          response?.content || 'Failed to fetch categories',
+          categoriesResponse?.content || 'Failed to fetch categories',
         );
       }
 
       // Return the content (list of genders)
-      return response.content;
+      return categoriesResponse.content;
     } catch (error) {
       throw new InternalServerErrorException(
-        `Error fetching categories: ${error.message}`,
+        `Error fetching categories: ${error}`,
       );
     }
   }
-
-  // findOne(id: number) {
-  //   return `This action returns a #${id} category`;
-  // }
-
-  // update(id: number, updateCategoryDto: UpdateCategoryDto) {
-  //   return `This action updates a #${id} category`;
-  // }
-
-  // remove(id: number) {
-  //   return `This action removes a #${id} category`;
-  // }
 }

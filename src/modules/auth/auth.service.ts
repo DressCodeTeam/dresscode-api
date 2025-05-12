@@ -1,14 +1,34 @@
 import {
   Injectable,
   UnauthorizedException,
-  InternalServerErrorException,
   BadRequestException,
-  Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
+import { LoginResponseDto } from './dto/login.dto';
+import { RegisterResponseDto } from './dto/register.dto';
+
+type UserDetails = {
+  id: string;
+  email: string;
+  pseudo: string;
+};
+
+type ConnectUserResponse = {
+  connect_user: {
+    success: boolean;
+    content: UserDetails;
+  };
+}[];
+
+type CreateUserResponse = {
+  create_user: {
+    success: boolean;
+    content: RegisterResponseDto;
+  };
+}[];
 
 @Injectable()
 export class AuthService {
@@ -18,17 +38,11 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async validateUser(email: string, password: string): Promise<any> {
-    // Execute the database function to validate the user
-    // const queryResult = await this.userRepository.query(
-    //   `SELECT connect_user($1, $2)`,
-    //   [email, password],
-    // );
-
-    const queryResult = await this.userRepository.query(
+  async validateUser(email: string, password: string): Promise<UserDetails> {
+    const queryResult = (await this.userRepository.query(
       `SELECT connect_user($1, $2)`,
       [email, password],
-    );
+    )) as ConnectUserResponse;
 
     // Extract the response from the query result
     const userValidationResponse = queryResult[0]?.connect_user;
@@ -47,18 +61,15 @@ export class AuthService {
     return userValidationResponse.content;
   }
 
-  async login(
-    email: string,
-    password: string,
-  ): Promise<{ access_token: string }> {
+  async login(email: string, password: string): Promise<LoginResponseDto> {
     // Validate the user credentials
-    const user = await this.validateUser(email, password);
+    const user: UserDetails = await this.validateUser(email, password);
 
     // Prepare the payload for the JWT
     const jwtPayload = { sub: user.id, email: user.email };
 
     // Sign the JWT and return the access token
-    return { access_token: this.jwtService.sign(jwtPayload) };
+    return { accessToken: this.jwtService.sign(jwtPayload) };
   }
 
   async register(
@@ -67,18 +78,18 @@ export class AuthService {
     pseudo: string,
     birthDate: Date,
     idGender: number,
-  ): Promise<any> {
+  ): Promise<RegisterResponseDto> {
     // Execute the database function to create a new user
-    const queryResult = await this.userRepository.query(
+    const queryResult = (await this.userRepository.query(
       `SELECT create_user($1, $2, $3, $4, $5)`,
-      [email, password, pseudo, birthDate, idGender],
-    );
+      [idGender, pseudo, email, birthDate, password],
+    )) as CreateUserResponse;
 
     // Extract the response from the query result
     const userCreationResponse = queryResult[0]?.create_user;
 
     // Check if the response indicates a successful user creation
-    const isCreationSuccessful = userCreationResponse?.succes ?? false;
+    const isCreationSuccessful = userCreationResponse?.success ?? false;
 
     if (!isCreationSuccessful) {
       // Throw a BadRequestException if user creation fails
