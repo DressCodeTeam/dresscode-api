@@ -26,7 +26,7 @@ function setupSwagger(app: INestApplication) {
         description: 'Enter JWT token',
         in: 'header',
       },
-      'access-token',
+      'accessToken',
     )
     .addTag('DressCode')
     .build();

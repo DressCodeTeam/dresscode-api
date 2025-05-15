@@ -9,6 +9,7 @@ import { GarmentsModule } from './modules/garments/garments.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { StylesModule } from './modules/styles/styles.module';
 import { OutfitsModule } from './modules/outfits/outfits.module';
+import { CloudinaryService } from './modules/cloudinary/cloudinary.service';
 import databaseConfig from './config/database.config';
 import jwtConfig from './config/jwt.config';
 
@@ -28,5 +29,6 @@ import jwtConfig from './config/jwt.config';
     StylesModule,
     OutfitsModule,
   ],
+  providers: [CloudinaryService],
 })
 export class AppModule {}
