@@ -1,15 +1,14 @@
-import { IsInt, IsNotEmpty, IsUrl } from 'class-validator';
+import { IsInt, IsNotEmpty } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateGarmentDto {
-  @IsUrl() // Ensures the value is a valid URL
-  @IsNotEmpty()
   @ApiProperty({
-    description: 'The URL of the garment image',
-    example: 'https://example.com/image.jpg',
+    type: 'string',
+    format: 'binary',
+    description: 'Image file to upload',
   })
-  image: string; // Represents the image URL
+  image: any; // Must be `any`, as it's a file (Multer handles it) Represents the image URL
 
   @IsInt()
   @Type(() => Number) // Ensures the value is transformed to a number

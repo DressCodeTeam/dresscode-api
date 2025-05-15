@@ -1,5 +1,4 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { CreateGarmentDto } from './dto/create-garment.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Garment } from './entities/garment.entity';
 import { Repository } from 'typeorm';
@@ -28,14 +27,13 @@ export class GarmentsService {
 
   async create(
     userId: string,
-    createGarmentDto: CreateGarmentDto,
+    subcategory_id: number,
+    imageUrl: string,
   ): Promise<GarmentResponseDto> {
-    const { image, subcategory_id } = createGarmentDto;
-
     try {
       const queryResult = (await this.garmentRepository.query(
         `SELECT create_garment($1, $2, $3, $4)`,
-        [userId, image, subcategory_id, 'default description'],
+        [userId, imageUrl, subcategory_id, 'default description'],
       )) as CreateGarmentResponse;
 
       // Extract the response from the query result

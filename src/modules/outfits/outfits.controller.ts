@@ -21,7 +21,7 @@ import {
 import { OutfitResponseDto } from './dto/outfit-response.dto';
 import { GarmentSummaryDto } from '../garments/dto/garment-response.dto';
 
-@ApiBearerAuth()
+@ApiBearerAuth('accessToken')
 @UseGuards(JwtAuthGuard)
 @Controller('outfits')
 export class OutfitsController {
