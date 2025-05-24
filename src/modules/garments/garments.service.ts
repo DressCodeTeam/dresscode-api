@@ -1,8 +1,14 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Garment } from './entities/garment.entity';
 import { Repository } from 'typeorm';
 import { GarmentResponseDto } from './dto/garment-response.dto';
+import { CategoriesService } from '../categories/categories.service';
+import { AiService, ImageAnalysisResult } from '../ai/ai.service';
 
 type CreateGarmentResponse = {
   create_garment: {
@@ -23,17 +29,40 @@ export class GarmentsService {
   constructor(
     @InjectRepository(Garment)
     private readonly garmentRepository: Repository<Garment>,
+    private readonly categoriesService: CategoriesService,
+    private readonly aiService: AiService,
   ) {}
 
-  async create(
-    userId: string,
-    subcategory_id: number,
-    imageUrl: string,
-  ): Promise<GarmentResponseDto> {
+  async create(userId: string, imageUrl: string): Promise<GarmentResponseDto> {
     try {
+      // Fetch the subcategory details
+      const subcategories = (await this.categoriesService.findAll()).flatMap(
+        (category) => category.subcategories,
+      );
+
+      Logger.log(
+        `Subcategories fetched for garment creation: ${JSON.stringify(subcategories)}`,
+      );
+      Logger.log(`Image URL: ${imageUrl}`);
+
+      const imageAnalysis: ImageAnalysisResult =
+        await this.aiService.analyzeImage({
+          image_url: imageUrl,
+          subcategories: subcategories,
+        });
+
+      if (imageAnalysis.subcategory_id === null) {
+        throw new InternalServerErrorException('Image analysis failed');
+      }
+
       const queryResult = (await this.garmentRepository.query(
         `SELECT create_garment($1, $2, $3, $4)`,
-        [userId, imageUrl, subcategory_id, 'default description'],
+        [
+          userId,
+          imageUrl,
+          imageAnalysis.subcategory_id,
+          imageAnalysis.description,
+        ],
       )) as CreateGarmentResponse;
 
       // Extract the response from the query result
