@@ -7,6 +7,7 @@ import { OutfitResponseDto } from './dto/outfit-response.dto';
 import { GarmentSummaryDto } from '../garments/dto/garment-response.dto';
 import { GarmentsService } from '../garments/garments.service';
 import { AiService, OutfitResult } from '../ai/ai.service';
+import { UsersService } from '../users/users.service';
 
 type CreateOutfitResponse = {
   create_outfit: {
@@ -33,8 +34,9 @@ export class OutfitsService {
   constructor(
     @InjectRepository(Outfit)
     private readonly outfitRepository: Repository<Outfit>,
-    private readonly aiService: AiService, // Assuming you have an AI service for outfit generation
-    private readonly garmentsService: GarmentsService, // Assuming you have a service for garment management
+    private readonly aiService: AiService,
+    private readonly garmentsService: GarmentsService,
+    private readonly usersService: UsersService,
   ) {}
 
   async create(
@@ -132,10 +134,12 @@ export class OutfitsService {
       }),
     );
 
+    const userProfile = await this.usersService.getProfile(userId);
+
     const outfits = await this.aiService.generateOutfits({
       garments: user_garments,
       nb_outfits,
-      sex: 'male', // TODO: Replace with actual user's gender via get gender
+      sex: userProfile.gender,
       style,
       weather,
     });
