@@ -5,9 +5,15 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Outfit } from './entities/outfit.entity';
 import { AiModule } from '../ai/ai.module';
 import { GarmentsModule } from '../garments/garments.module';
+import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Outfit]), AiModule, GarmentsModule],
+  imports: [
+    TypeOrmModule.forFeature([Outfit]),
+    AiModule,
+    GarmentsModule,
+    UsersModule,
+  ],
   controllers: [OutfitsController],
   providers: [OutfitsService],
 })
