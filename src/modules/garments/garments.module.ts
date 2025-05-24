@@ -11,5 +11,6 @@ import { CategoriesModule } from '../categories/categories.module';
   imports: [TypeOrmModule.forFeature([Garment]), AiModule, CategoriesModule],
   controllers: [GarmentsController],
   providers: [GarmentsService, CloudinaryService],
+  exports: [GarmentsService],
 })
 export class GarmentsModule {}

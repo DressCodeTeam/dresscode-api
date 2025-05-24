@@ -20,6 +20,8 @@ import {
 } from '@nestjs/swagger';
 import { OutfitResponseDto } from './dto/outfit-response.dto';
 import { GarmentSummaryDto } from '../garments/dto/garment-response.dto';
+import { GenerateOutfitsDto } from './dto/generate-outfits.dto';
+import { OutfitResult } from '../ai/ai.service';
 
 @ApiBearerAuth('accessToken')
 @UseGuards(JwtAuthGuard)
@@ -66,5 +68,28 @@ export class OutfitsController {
     @Param('id') id: string,
   ): Promise<GarmentSummaryDto[]> {
     return this.outfitsService.findOne(+id);
+  }
+
+  @Post('generate')
+  @ApiOperation({ summary: 'Generate AI-based outfits' })
+  @ApiCreatedResponse({
+    description: 'Outfits generated successfully',
+    schema: {
+      example: [
+        { name: 'outfit1', garments: [5, 2] },
+        { name: 'outfit2', garments: [3, 5] },
+      ],
+    },
+  })
+  generateOutfits(
+    @Request() req: AuthenticatedRequest,
+    @Body() generateOutfitdto: GenerateOutfitsDto,
+  ): Promise<OutfitResult[]> {
+    return this.outfitsService.generateOutfits(
+      req.user.userId,
+      generateOutfitdto.nb_outfits,
+      generateOutfitdto.style,
+      generateOutfitdto.weather,
+    );
   }
 }
