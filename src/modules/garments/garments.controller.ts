@@ -2,7 +2,6 @@ import {
   Controller,
   Get,
   Post,
-  Body,
   UseGuards,
   Request,
   UploadedFile,
@@ -33,7 +32,6 @@ export class GarmentsController {
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
-  // TODO: Implement image upload on cloudinary
   @Post()
   @ApiOperation({ summary: "Add a new garment to the use's garment" })
   @ApiConsumes('multipart/form-data')
@@ -46,15 +44,10 @@ export class GarmentsController {
   async create(
     @Request() req: AuthenticatedRequest,
     @UploadedFile() file: Express.Multer.File,
-    @Body() body: Pick<CreateGarmentDto, 'subcategory_id'>,
   ): Promise<GarmentResponseDto> {
     const imageUrl = await this.cloudinaryService.uploadImage(file);
 
-    return this.garmentsService.create(
-      req.user.userId,
-      body.subcategory_id,
-      imageUrl,
-    );
+    return this.garmentsService.create(req.user.userId, imageUrl);
   }
 
   @Get()

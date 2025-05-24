@@ -10,15 +10,17 @@ import { CategoriesModule } from './modules/categories/categories.module';
 import { StylesModule } from './modules/styles/styles.module';
 import { OutfitsModule } from './modules/outfits/outfits.module';
 import { CloudinaryService } from './modules/cloudinary/cloudinary.service';
+import { AiModule } from './modules/ai/ai.module';
 import databaseConfig from './config/database.config';
 import jwtConfig from './config/jwt.config';
+import aiConfig from './config/ai.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: [`.env.${process.env.NODE_ENV}`, '.env'],
-      load: [appConfig, databaseConfig, jwtConfig],
+      load: [appConfig, databaseConfig, jwtConfig, aiConfig],
     }),
     DatabaseModule,
     UsersModule,
@@ -28,6 +30,7 @@ import jwtConfig from './config/jwt.config';
     CategoriesModule,
     StylesModule,
     OutfitsModule,
+    AiModule,
   ],
   providers: [CloudinaryService],
 })
