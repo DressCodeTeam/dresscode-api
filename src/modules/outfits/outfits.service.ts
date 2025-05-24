@@ -5,6 +5,8 @@ import { Outfit } from './entities/outfit.entity';
 import { Repository } from 'typeorm';
 import { OutfitResponseDto } from './dto/outfit-response.dto';
 import { GarmentSummaryDto } from '../garments/dto/garment-response.dto';
+import { GarmentsService } from '../garments/garments.service';
+import { AiService, OutfitResult } from '../ai/ai.service';
 
 type CreateOutfitResponse = {
   create_outfit: {
@@ -31,6 +33,8 @@ export class OutfitsService {
   constructor(
     @InjectRepository(Outfit)
     private readonly outfitRepository: Repository<Outfit>,
+    private readonly aiService: AiService, // Assuming you have an AI service for outfit generation
+    private readonly garmentsService: GarmentsService, // Assuming you have a service for garment management
   ) {}
 
   async create(
@@ -112,5 +116,30 @@ export class OutfitsService {
         `Error fetching outfit garments ${error}`,
       );
     }
+  }
+
+  async generateOutfits(
+    userId: string,
+    nb_outfits: number,
+    style: string,
+    weather: string,
+  ): Promise<OutfitResult[]> {
+    const user_garments = (await this.garmentsService.findAll(userId)).map(
+      (g) => ({
+        garment_id: g.id,
+        subcategory: g.subcategory,
+        description: g.description ?? 'No description provided',
+      }),
+    );
+
+    const outfits = await this.aiService.generateOutfits({
+      garments: user_garments,
+      nb_outfits,
+      sex: 'male', // TODO: Replace with actual user's gender via get gender
+      style,
+      weather,
+    });
+
+    return outfits;
   }
 }
