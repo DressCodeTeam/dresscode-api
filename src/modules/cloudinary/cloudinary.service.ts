@@ -17,6 +17,7 @@ export class CloudinaryService {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder: 'uploads',
+          format: 'png',
           resource_type: 'image',
           transformation: [{ effect: 'background_removal' }],
         },
