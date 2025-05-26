@@ -15,7 +15,11 @@ export class CloudinaryService {
   async uploadImage(file: Express.Multer.File): Promise<string> {
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
-        { folder: 'uploads', resource_type: 'image' },
+        {
+          folder: 'uploads',
+          resource_type: 'image',
+          transformation: [{ effect: 'background_removal' }],
+        },
         (error, result: UploadApiResponse) => {
           if (error)
             return reject(
