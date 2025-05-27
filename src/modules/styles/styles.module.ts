@@ -8,5 +8,6 @@ import { Style } from './entities/style.entity';
   imports: [TypeOrmModule.forFeature([Style])], // Add your entities here
   controllers: [StylesController],
   providers: [StylesService],
+  exports: [StylesService],
 })
 export class StylesModule {}
