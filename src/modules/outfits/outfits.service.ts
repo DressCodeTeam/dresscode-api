@@ -1,13 +1,22 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { CreateOutfitDto } from './dto/create-outfit.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Outfit } from './entities/outfit.entity';
 import { Repository } from 'typeorm';
 import { OutfitResponseDto } from './dto/outfit-response.dto';
-import { GarmentSummaryDto } from '../garments/dto/garment-response.dto';
+import {
+  GarmentResponseDto,
+  GarmentSummaryDto,
+} from '../garments/dto/garment-response.dto';
 import { GarmentsService } from '../garments/garments.service';
-import { AiService, OutfitResult } from '../ai/ai.service';
+import { AiService } from '../ai/ai.service';
 import { UsersService } from '../users/users.service';
+import { StylesService } from '../styles/styles.service';
+import { GenerateOutfitsResponseDto } from './dto/generate-outfits.dto';
 
 type CreateOutfitResponse = {
   create_outfit: {
@@ -34,6 +43,7 @@ export class OutfitsService {
   constructor(
     @InjectRepository(Outfit)
     private readonly outfitRepository: Repository<Outfit>,
+    private readonly styleService: StylesService,
     private readonly aiService: AiService,
     private readonly garmentsService: GarmentsService,
     private readonly usersService: UsersService,
@@ -123,25 +133,55 @@ export class OutfitsService {
   async generateOutfits(
     userId: string,
     nb_outfits: number,
-    style: string,
+    style_id: number,
     weather: string,
-  ): Promise<OutfitResult[]> {
-    const user_garments = (await this.garmentsService.findAll(userId)).map(
-      (g) => ({
-        garment_id: g.id,
-        subcategory: g.subcategory,
-        description: g.description ?? 'No description provided',
-      }),
-    );
+  ): Promise<GenerateOutfitsResponseDto[]> {
+    const full_user_garments = await this.garmentsService.findAll(userId);
+    const user_garments = full_user_garments.map((g) => ({
+      garment_id: g.id,
+      subcategory: g.subcategory,
+      description: g.description ?? 'No description provided',
+    }));
 
     const userProfile = await this.usersService.getProfile(userId);
 
-    const outfits = await this.aiService.generateOutfits({
+    const style = (await this.styleService.findAll()).find(
+      (obj) => obj.id === style_id,
+    );
+
+    if (!style) {
+      throw new BadRequestException('Error style not found');
+    }
+
+    const generated_outfits = await this.aiService.generateOutfits({
       garments: user_garments,
       nb_outfits,
       sex: userProfile.gender,
-      style,
+      style: style.name,
       weather,
+    });
+
+    const outfits: GenerateOutfitsResponseDto[] = [];
+
+    generated_outfits.forEach((o) => {
+      const garments: GarmentResponseDto[] = [];
+
+      o.garments.forEach((garment_id) => {
+        const g = full_user_garments.find((g) => g.id === garment_id);
+        if (!g) {
+          throw new InternalServerErrorException(
+            `Generated garment id ${garment_id} not found`,
+          );
+        }
+
+        garments.push(g);
+      });
+
+      outfits.push({
+        name: o.name,
+        style_id,
+        garments: garments,
+      });
     });
 
     return outfits;
